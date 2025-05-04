@@ -80,7 +80,7 @@ def generate_unshuffled_schedule(weeks, matchups, teamlist, time_limit):
     gen_finished = False
     attempt_count = 0
     start_time = time.time()
-    #time.sleep(0.05)
+    #time.sleep(0.05) # For debugging
     #print(f"Each week will have {games_in_week} games.")  # For debugging
     print("\nGenerating schedule...")
 
@@ -96,12 +96,12 @@ def generate_unshuffled_schedule(weeks, matchups, teamlist, time_limit):
         schedule = []
         for matchup in matchups:
             matchup.usesleft = matchup_uses_left_resetter  # Reset uses left for each matchup
-        #time.sleep(1)
-        #print("Generating schedule...")
+        #time.sleep(1) # For debugging
+        #print("Generating schedule...") # For debugging
         for week in weeks:
-            #time.sleep(0.05)
-            #print(f"\nGenerating {week.name}")
-            week.matchups = []  # Reset matchups for the week
+            #time.sleep(0.05) # For debugging
+            #print(f"\nGenerating {week.name}") # For debugging
+            week.matchups = []  # Reset matchups for the week 
             matchupscopy = matchups.copy()
             random.shuffle(matchupscopy)  # Shuffle the matchups to randomize the order
             prioritized_matchups = sorted(matchupscopy, key=attrgetter("usesleft"), reverse=True)  # Sort by uses left
@@ -119,21 +119,20 @@ def generate_unshuffled_schedule(weeks, matchups, teamlist, time_limit):
                     usedteams.extend([matchup.team1, matchup.team2])
                     matchup.usesleft -= 1
                     added = True
-                    #time.sleep(0.05)
-                    #print(f"Added: {matchup.team1} vs {matchup.team2} | Uses left: {matchup.usesleft}")
+                    #time.sleep(0.05) # For debugging
+                    #print(f"Added: {matchup.team1} vs {matchup.team2} | Uses left: {matchup.usesleft}") # For debugging
                     break
                 if not added:
-                    #time.sleep(0.05)
-                    #print("No valid matchups left to assign this week.")
+                    #time.sleep(0.05) # For debugging
+                    #print("No valid matchups left to assign this week.") # For debugging
                     break
             
             week.matchups = matchups_this_week
             schedule.append(week)
 
-        for week in schedule:
-            if len(week.matchups) != games_in_week:
-                # Start over if any week has fewer matchups than expected
-                break
+        if any(len(week.matchups) != games_in_week for week in schedule):
+            #print(f"Attempt {attempt_count} failed: Incomplete week(s) detected.") # For debugging
+            continue
         
         # Checking if some teams played each other much more than they played another team instead of being balanced.
         prioritized_matchups = sorted(matchups, key=attrgetter("usesleft"))
@@ -141,8 +140,8 @@ def generate_unshuffled_schedule(weeks, matchups, teamlist, time_limit):
             continue
         else:
             gen_finished = True
-            #time.sleep(0.2)
-            #print(f"{week.name} was added to schedule with {len(week.matchups)} matchups: {[f'{m.team1} vs {m.team2}' for m in week.matchups]}")
+            #time.sleep(0.2) # For debugging
+            #print(f"{week.name} was added to schedule with {len(week.matchups)} matchups: {[f'{m.team1} vs {m.team2}' for m in week.matchups]}") # For debugging
             print(f"\nSchedule generated on attempt {attempt_count} after {time.time() - start_time:.3f} seconds.")
 
     return schedule
