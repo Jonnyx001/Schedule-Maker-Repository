@@ -10,7 +10,13 @@ def input_number_of_weeks():
 
 # Allows user to build a list of team names. Strings.
 def input_teams():
-    teamnum = int(input("How many teams are in your league?: "))
+    try:
+        teamnum = int(input("How many teams are in your league?: "))
+    except ValueError:
+        print("Invalid input. Please enter a whole number.")
+        time.sleep(1.5)
+        return input_teams()
+    
     teamlist = []
     for i in range(teamnum):
         team = input(f"Enter team {i + 1}: ")
