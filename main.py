@@ -1,8 +1,8 @@
 from functions import input_number_of_weeks
 from functions import input_teams
 from functions import generate_weeks
-from functions import generate_matchups
-from functions import generate_schedule
+from functions import generate_matchups_v2
+from functions import generate_unshuffled_schedule
 from functions import print_schedule
 from functions import shuffle_so_no_repeats
 
@@ -11,6 +11,7 @@ import random
 import msvcrt
 import os
 
+time_limit = 10 # used individually for generate and shuffle (up to {time_limit} seconds each)
 
 # 6 weeks 6 teams makes it so that some teams never get to play each other sometimes. Big issue!!! (i may not be able to do a home and away. would have to be swapped later somehow)
 has_weeknum = False
@@ -40,44 +41,42 @@ while not has_teamlist:
         has_teamlist = True
 
 
-time_limit = 20
 weeks = generate_weeks(weeknum)
-matchups = generate_matchups(teamlist, weeknum)
-
-schedule = generate_schedule(weeks, matchups, teamlist, time_limit, weeknum)
+matchups = generate_matchups_v2(teamlist, weeknum)
+unshuffled_schedule = generate_unshuffled_schedule(weeks, matchups, teamlist, time_limit)
+schedule = shuffle_so_no_repeats(unshuffled_schedule, weeknum, time_limit)
 
 print_schedule(schedule)
 
-finished = False
-while not finished:
+while True:
     print("\nHit \"g\" to generate a completely new schedule.\nHit \"s\" to only shuffle the weeks." \
     "\nHit \"c\" to create a copy of the schedule onto a text file on your desktop.\nHit \"q\" to quit.")
-    selection = msvcrt.getch()
+    key = msvcrt.getch()
 
-    if selection in {b"\x00", b"\xe0"}:
-        # Handle special keys (like arrow keys)
+    if key in {b"\x00", b"\xe0"}: # Handle special keys (like arrow keys)
         special = msvcrt.getch() # assigns second code to this variable and never uses it.
         print("\nInvalid input.")
         time.sleep(1.5)
         continue
     
     try:
-        selection_string = selection.decode("utf-8").lower()
+        key_string = key.decode("utf-8").lower()
     except UnicodeDecodeError:
         print("\nInvalid input.")
         time.sleep(1.5)
         
-    if selection_string == "g":
-        matchups = generate_matchups(teamlist, weeknum)
-        schedule = generate_schedule(weeks, matchups, teamlist, time_limit, weeknum)
+    if key_string == "g":
+        matchups = generate_matchups_v2(teamlist, weeknum)
+        unshuffled_schedule = generate_unshuffled_schedule(weeks, matchups, teamlist, time_limit)
+        schedule = shuffle_so_no_repeats(unshuffled_schedule, weeknum, time_limit)
         print_schedule(schedule)
 
-    elif selection_string == "s":
+    elif key_string == "s":
         random.shuffle(schedule) # Seems redundant but necessary to get out of a perfect schedule that wouldn't need to be shuffled.
-        shuffle_so_no_repeats(schedule, weeknum)
+        shuffle_so_no_repeats(schedule, weeknum, time_limit)
         print_schedule(schedule)
 
-    elif selection_string == "c":
+    elif key_string == "c":
 
         possible_paths = [
             os.path.join(os.path.expanduser("~"), "Desktop"),
@@ -99,12 +98,12 @@ while not finished:
             for week in schedule:
                 file.write(f"{week.name}:\n")
                 for matchup in week.matchups:
-                    file.write(f"{matchup.hometeam} vs {matchup.awayteam}\n")
+                    file.write(f"{matchup.team1} vs {matchup.team2}\n")
                 file.write("\n")
         print(f"\nSchedule copied to {file_path}")
 
-    elif selection_string == "q":
-        finished = True
+    elif key_string == "q":
+        break
 
     else:
         print("\nInvalid input.")
